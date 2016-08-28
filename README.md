@@ -2,4 +2,12 @@
 
 A Giphy plugin for the [Smithers Assistant](https://github.com/SmithersAssistant/smithers).
 
+## Installation
+
+```
+install smithers-giphy
+```
+
+## Preview
+
 ![](https://d.pr/i/18iKM+)

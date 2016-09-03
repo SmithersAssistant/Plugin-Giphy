@@ -1,9 +1,7 @@
-import React from 'react'
-
 const GIPHY_COMPONENT = 'com.robinmalfait.giphy';
 
 export default robot => {
-
+  const {React} = robot.dependencies
   const { Images } = robot.cards;
 
   const Giphy = React.createClass({

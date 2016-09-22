@@ -6,13 +6,23 @@ Object.defineProperty(exports, "__esModule", {
 
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
+var _styles = require('./styles');
+
+var _styles2 = _interopRequireDefault(_styles);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _objectWithoutProperties(obj, keys) { var target = {}; for (var i in obj) { if (keys.indexOf(i) >= 0) continue; if (!Object.prototype.hasOwnProperty.call(obj, i)) continue; target[i] = obj[i]; } return target; }
 
 var GIPHY_COMPONENT = 'com.robinmalfait.giphy';
 
 exports.default = function (robot) {
+  var enhance = robot.enhance;
+  var restorableComponent = robot.restorableComponent;
+  var withStyles = robot.withStyles;
+  var A = robot.UI.A;
   var React = robot.dependencies.React;
-  var Images = robot.cards.Images;
+  var Blank = robot.cards.Blank;
 
 
   var Giphy = React.createClass({
@@ -32,11 +42,14 @@ exports.default = function (robot) {
       });
 
       robot.fetchJson('http://api.giphy.com/v1/gifs/search?' + params).then(function (res) {
-        var images = res.data.map(function (img) {
-          return img.images.fixed_height.url;
+        _this.setState({
+          images: res.data.map(function (img) {
+            return {
+              src: img.images.fixed_height.url,
+              url: img.url
+            };
+          })
         });
-
-        _this.setState({ images: images });
       });
     },
     renderTitle: function renderTitle() {
@@ -46,7 +59,7 @@ exports.default = function (robot) {
         'Giphy',
         React.createElement(
           'small',
-          { style: { marginLeft: 8, color: "#ccc" } },
+          { className: this.props.styles.searchQuery },
           '(',
           this.props.q,
           ')'
@@ -54,19 +67,40 @@ exports.default = function (robot) {
       );
     },
     render: function render() {
-      var other = _objectWithoutProperties(this.props, []);
+      var _props = this.props;
+      var styles = _props.styles;
+      var q = _props.q;
+
+      var other = _objectWithoutProperties(_props, ['styles', 'q']);
 
       var images = this.state.images;
 
 
-      return React.createElement(Images, _extends({}, other, {
-        title: this.renderTitle(),
-        images: images
-      }));
+      return React.createElement(
+        Blank,
+        _extends({}, other, {
+          title: this.renderTitle()
+        }),
+        React.createElement(
+          'ul',
+          { className: styles.cardImagesStyles },
+          React.createElement(
+            'div',
+            { className: styles.imagesStyles },
+            images && images.map(function (img, i) {
+              return React.createElement(
+                A,
+                { target: '_blank', href: img.url },
+                React.createElement('img', { className: styles.imgStyles, key: i, src: img.src })
+              );
+            })
+          )
+        )
+      );
     }
   });
 
-  robot.registerComponent(Giphy, GIPHY_COMPONENT);
+  robot.registerComponent(enhance(Giphy, [restorableComponent, withStyles(_styles2.default)]), GIPHY_COMPONENT);
 
   robot.listen(/^giphy (.*)$/, {
     description: "search for gifs",

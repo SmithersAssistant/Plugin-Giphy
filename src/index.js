@@ -1,8 +1,11 @@
+import styles from './styles';
 const GIPHY_COMPONENT = 'com.robinmalfait.giphy';
 
 export default robot => {
-  const {React} = robot.dependencies
-  const { Images } = robot.cards;
+  const { enhance, restorableComponent, withStyles } = robot;
+  const { A } = robot.UI;
+  const { React } = robot.dependencies
+  const { Blank } = robot.cards;
 
   const Giphy = React.createClass({
     getInitialState() {
@@ -19,41 +22,58 @@ export default robot => {
 
       robot.fetchJson(`http://api.giphy.com/v1/gifs/search?${params}`)
         .then(res => {
-          const images = res.data.map(img => img.images.fixed_height.url);
-
-          this.setState({ images });
+          this.setState({
+            images: res.data.map(img => {
+              return {
+                src: img.images.fixed_height.url,
+                url: img.url
+              };
+            })
+          });
         });
     },
     renderTitle() {
       return (
         <span>
           Giphy
-          <small style={{marginLeft: 8, color: "#ccc"}}>({this.props.q})</small>
+          <small className={this.props.styles.searchQuery}>({this.props.q})</small>
         </span>
       )
     },
     render() {
-      let { ...other } = this.props
+      let { styles, q, ...other } = this.props
       let { images } = this.state
 
       return (
-        <Images
+        <Blank
           {...other}
           title={this.renderTitle()}
-          images={images}
-        />
+        >
+          <ul className={styles.cardImagesStyles}>
+            <div className={styles.imagesStyles}>
+              {images && images.map((img, i) => (
+                <A target="_blank" href={img.url}>
+                  <img className={styles.imgStyles} key={i} src={img.src} />
+                </A>
+              ))}
+            </div>
+          </ul>
+        </Blank>
       )
     }
   });
 
-  robot.registerComponent(Giphy, GIPHY_COMPONENT);
+  robot.registerComponent(enhance(Giphy, [
+    restorableComponent,
+    withStyles(styles)
+  ]), GIPHY_COMPONENT);
 
   robot.listen(/^giphy (.*)$/, {
     description: "search for gifs",
     usage: 'giphy <search_query>'
   }, (res) => {
     robot.addCard(GIPHY_COMPONENT, {
-      q: (res.matches[1] || '').trim()
+      q: (res.matches[ 1 ] || '').trim()
     });
   });
 }
